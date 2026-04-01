@@ -1,0 +1,331 @@
+{
+  "info": {
+    "name": "Inventory API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Test getSingleProduct",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});",
+              "pm.test('Product has correct ID', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.ProductID).to.eql(1001);",
+              "});",
+              "pm.test('Product has all required fields', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('ProductID');",
+              "    pm.expect(jsonData).to.have.property('Name');",
+              "    pm.expect(jsonData).to.have.property('UnitPrice');",
+              "    pm.expect(jsonData).to.have.property('StockQuantity');",
+              "    pm.expect(jsonData).to.have.property('Description');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/getSingleProduct?id=1001"
+      }
+    },
+    {
+      "name": "Test getSingleProduct invalid ID returns 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 404 for non-existent product', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "pm.test('Error detail is returned', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('detail');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/getSingleProduct?id=99999"
+      }
+    },
+    {
+      "name": "Test getAll",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response is a non-empty array', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "    pm.expect(jsonData.length).to.be.above(0);",
+              "});",
+              "pm.test('Each product has required fields', function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.slice(0, 5).forEach(function (product) {",
+              "        pm.expect(product).to.have.property('ProductID');",
+              "        pm.expect(product).to.have.property('Name');",
+              "        pm.expect(product).to.have.property('UnitPrice');",
+              "        pm.expect(product).to.have.property('StockQuantity');",
+              "        pm.expect(product).to.have.property('Description');",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/getAll"
+      }
+    },
+    {
+      "name": "Test addNew",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Success message returned', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message).to.eql('Product added successfully');",
+              "    pm.expect(jsonData.ProductID).to.eql(9999);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/addNew",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ProductID\": 9999, \"Name\": \"Test Product\", \"UnitPrice\": 99.99, \"StockQuantity\": 10, \"Description\": \"Test description for unit testing\"}"
+        }
+      }
+    },
+    {
+      "name": "Test addNew duplicate returns 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400 for duplicate ID', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test('Error detail mentions already exists', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.detail).to.include('already exists');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/addNew",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ProductID\": 9999, \"Name\": \"Duplicate Product\", \"UnitPrice\": 10.00, \"StockQuantity\": 1, \"Description\": \"Should fail as duplicate\"}"
+        }
+      }
+    },
+    {
+      "name": "Test deleteOne",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Delete success message returned', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message).to.eql('Product deleted successfully');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/deleteOne?id=9999"
+      }
+    },
+    {
+      "name": "Test deleteOne non-existent returns 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 404 for already deleted product', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/deleteOne?id=9999"
+      }
+    },
+    {
+      "name": "Test startsWith",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response is an array', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});",
+              "pm.test('All returned products start with S', function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.forEach(function (product) {",
+              "        pm.expect(product.Name.charAt(0).toUpperCase()).to.eql('S');",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/startsWith?letter=s"
+      }
+    },
+    {
+      "name": "Test paginate",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response is an array', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});",
+              "pm.test('Returns at most 10 products', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.length).to.be.at.most(10);",
+              "});",
+              "pm.test('Products are within the requested ID range', function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.forEach(function (product) {",
+              "        pm.expect(product.ProductID).to.be.at.least(1001);",
+              "        pm.expect(product.ProductID).to.be.at.most(1020);",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/paginate?startId=1001&endId=1020"
+      }
+    },
+    {
+      "name": "Test convert",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response contains USD and EUR prices', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('PriceUSD');",
+              "    pm.expect(jsonData).to.have.property('PriceEUR');",
+              "    pm.expect(jsonData).to.have.property('ExchangeRate');",
+              "});",
+              "pm.test('EUR price is less than USD price', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.PriceEUR).to.be.below(jsonData.PriceUSD);",
+              "});",
+              "pm.test('Exchange rate is a positive number', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.ExchangeRate).to.be.above(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/convert?id=1001"
+      }
+    },
+    {
+      "name": "Test metrics endpoint",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Response contains Prometheus metrics', function () {",
+              "    pm.expect(pm.response.text()).to.include('api_requests_total');",
+              "    pm.expect(pm.response.text()).to.include('api_request_duration_seconds');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/metrics"
+      }
+    }
+  ],
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000"}
+  ]
+}
